@@ -4,6 +4,8 @@ import { useState, useRef, useCallback, useEffect } from "react"
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from "@react-google-maps/api"
 import type { Report } from "@/context/reports-context"
 import { Skeleton } from "@/components/ui/skeleton"
+// Import the fallback component at the top of the file
+import { MapErrorFallback } from "@/components/map-error-fallback"
 
 const mapContainerStyle = {
   width: "100%",
@@ -199,6 +201,12 @@ export function GoogleMapComponent({
     libraries: ["places"],
   })
 
+  useEffect(() => {
+    if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
+      console.warn("Google Maps API key is missing. Map functionality will be limited.")
+    }
+  }, [])
+
   const [map, setMap] = useState<google.maps.Map | null>(null)
   const [selectedReport, setSelectedReport] = useState<Report | null>(null)
 
@@ -223,7 +231,7 @@ export function GoogleMapComponent({
   }, [map, selectedLocation])
 
   if (loadError) {
-    return <div>Error loading maps</div>
+    return <MapErrorFallback onRetry={() => window.location.reload()} />
   }
 
   if (!isLoaded) {
