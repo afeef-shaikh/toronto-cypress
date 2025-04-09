@@ -86,5 +86,40 @@ Create a `.env.local` file in the root directory with the following variables:
    # or
    yarn dev
 
-5. 5. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
+5. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
+
+## 📊 Data Flow
+
+### 1. **Report Submission**:
+
+1. User selects location on map
+2. User fills out report details and uploads images
+3. System creates report with "pending" status
+4. Notification is generated for administrators
+
+![Report Submission Interface](https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-iv6WvZjkFqYhto1qw59BHgRaNO2MZe.png)
+
+The Report Submission interface provides an intuitive form alongside an interactive map. Users can precisely pinpoint the location of an issue by clicking directly on the map, which automatically captures the coordinates. The form allows selection of problem type (pothole, street light, graffiti, etc.), detailed description, and photo uploads to provide visual evidence of the issue. This dual-panel approach ensures accurate location reporting while collecting all necessary details for city services to address the problem efficiently.
+
+### 2. **Report Processing**:
+
+1. Administrators review submitted reports
+2. Status is updated to "in-progress" when work begins
+3. Citizens receive notifications about status changes
+4. Report is marked "resolved" when the issue is fixed
+
+![Report Detail View](https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-L7CfE6zSAsbFIIa4ZtkQkYN1NI0Kvn.png)
+
+The Report Detail view provides comprehensive information about a specific issue. Both citizens and administrators can track the current status (pending, in progress, or resolved), view the exact location on the embedded map, and see the complete timeline of the report. Administrators have additional controls to update the status as work progresses. The interface clearly displays all relevant information including description, location coordinates, submission date, and attached images. This transparency keeps citizens informed while giving administrators the tools they need to manage the resolution process.
+
+### 3. **Report Tracking**:
+
+1. Citizens can view all their submitted reports
+2. Reports are filterable by status and type
+3. Timeline shows the history of each report
+4. Citizens can add additional information to existing reports
+
+![My Reports Dashboard](https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-lQ1lmJP74i5qkZ95EkD98Qa3QV0miV.png)
+
+The My Reports dashboard gives citizens a personalized view of all their submitted issues. Reports are organized in a clean, card-based layout with clear status indicators (color-coded badges for pending, in progress, and resolved). Users can filter their reports by status using the tab navigation at the top, making it easy to focus on active issues or view their resolution history. Each report card displays the essential information at a glance, with the option to view full details. This dashboard empowers citizens to stay informed about the status of infrastructure issues they've reported without needing to contact city services directly.
 
