@@ -88,6 +88,7 @@ Create a `.env.local` file in the root directory with the following variables:
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
+
 ## 📊 Data Flow
 
 ### 1. **Report Submission**:
@@ -108,9 +109,9 @@ The Report Submission interface provides an intuitive form alongside an interact
 3. Citizens receive notifications about status changes
 4. Report is marked "resolved" when the issue is fixed
 
-![Report Detail View](https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-L7CfE6zSAsbFIIa4ZtkQkYN1NI0Kvn.png)
+![Admin Dashboard](https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-gBDEFj3d6RvIiJrcf16opk3jfzIOp8.png)
 
-The Report Detail view provides comprehensive information about a specific issue. Both citizens and administrators can track the current status (pending, in progress, or resolved), view the exact location on the embedded map, and see the complete timeline of the report. Administrators have additional controls to update the status as work progresses. The interface clearly displays all relevant information including description, location coordinates, submission date, and attached images. This transparency keeps citizens informed while giving administrators the tools they need to manage the resolution process.
+The Administrator Dashboard provides city officials with a comprehensive overview of all citizen reports. The interface displays key metrics at the top, showing total reports and their distribution across different statuses (pending, in progress, resolved). The main table presents all reports with essential details including ID, type, location, status, and submission date. Administrators can filter reports by status and type, search for specific issues, and access quick actions for each report. This centralized management system enables efficient processing of citizen-reported issues, ensuring timely responses and resolution tracking.
 
 ### 3. **Report Tracking**:
 
@@ -123,3 +124,22 @@ The Report Detail view provides comprehensive information about a specific issue
 
 The My Reports dashboard gives citizens a personalized view of all their submitted issues. Reports are organized in a clean, card-based layout with clear status indicators (color-coded badges for pending, in progress, and resolved). Users can filter their reports by status using the tab navigation at the top, making it easy to focus on active issues or view their resolution history. Each report card displays the essential information at a glance, with the option to view full details. This dashboard empowers citizens to stay informed about the status of infrastructure issues they've reported without needing to contact city services directly.
 
+## 🎨 UI/UX Design
+
+![About Page](https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-9umlSEhE6mbm7kDidFM1wcEgzeeKYl.png)
+
+Toronto Cypress features a clean, modern interface designed with both aesthetics and usability in mind. The design system employs:
+
+- **Consistent Color Palette**: Toronto's official blue serves as the primary color, creating brand recognition while ensuring accessibility with proper contrast ratios
+- **Card-Based Layout**: Information is organized in clear, distinct cards with consistent spacing and typography
+- **Intuitive Navigation**: The main navigation bar remains fixed at the top, providing easy access to all key sections
+- **Responsive Components**: All elements adapt seamlessly to different screen sizes, from mobile to desktop
+- **Visual Hierarchy**: Important information and actions are emphasized through size, color, and positioning
+- **Iconography**: Custom icons provide visual cues that complement text labels for improved comprehension
+- **Whitespace Utilization**: Generous spacing between elements reduces cognitive load and improves readability
+
+The About page exemplifies these principles, presenting the platform's mission and features in a structured, easily scannable format. Feature descriptions are accompanied by relevant icons, and the content is organized in logical sections with clear headings. This thoughtful design approach extends throughout the application, ensuring a consistent and intuitive user experience.
+
+<div align="center" style="margin-top: 50px; margin-bottom: 50px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 18px; color: #0077C0;">
+  <p>Built with ❤️ for the citizens of Toronto</p>
+</div>
