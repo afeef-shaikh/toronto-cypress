@@ -31,7 +31,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 
     try {
       if (mode === "login") {
-        await login(email, password)
+        await login(email, password, "citizen")
         toast({
           title: "Login successful",
           description: "Welcome back!",

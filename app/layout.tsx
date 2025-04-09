@@ -13,7 +13,6 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Toronto Cypress - Citizen Reporting System",
   description: "Report and track local infrastructure issues in Toronto",
-    generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -44,6 +43,3 @@ export default function RootLayout({
     </html>
   )
 }
-
-
-import './globals.css'

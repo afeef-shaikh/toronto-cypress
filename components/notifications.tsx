@@ -2,42 +2,34 @@
 
 import { useState } from "react"
 import { Bell } from "lucide-react"
-import { formatDistanceToNow } from "date-fns"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useNotifications, type NotificationType } from "@/context/notifications-context"
+import { useNotifications } from "@/context/notifications-context"
+import { formatDistanceToNow } from "date-fns"
 import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
 
 export function NotificationsButton() {
-  const { notifications, unreadCount, markAsRead, markAllAsRead, clearAllNotifications } = useNotifications()
+  const { notifications, unreadCount, markAsRead, markAllAsRead, removeNotification, clearAllNotifications } =
+    useNotifications()
   const [open, setOpen] = useState(false)
 
-  const handleNotificationClick = (id: string) => {
-    markAsRead(id)
-  }
-
-  const getNotificationIcon = (type: NotificationType) => {
-    switch (type) {
-      case "success":
-        return "✅"
-      case "warning":
-        return "⚠️"
-      case "error":
-        return "❌"
-      default:
-        return "ℹ️"
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen)
+    // Mark all as read when opening the dropdown
+    if (isOpen && unreadCount > 0) {
+      markAllAsRead()
     }
   }
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
+    <DropdownMenu open={open} onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
@@ -49,52 +41,50 @@ export function NotificationsButton() {
               {unreadCount}
             </Badge>
           )}
-          <span className="sr-only">Notifications</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
-        <div className="flex items-center justify-between p-4">
-          <h3 className="font-medium">Notifications</h3>
-          <div className="flex gap-1">
-            {unreadCount > 0 && (
-              <Button variant="ghost" size="sm" onClick={markAllAsRead}>
-                Mark all as read
-              </Button>
-            )}
-            {notifications.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={clearAllNotifications}>
-                Clear all
-              </Button>
-            )}
-          </div>
-        </div>
-        <DropdownMenuSeparator />
-        <ScrollArea className="h-[300px]">
-          {notifications.length > 0 ? (
-            notifications.map((notification) => (
-              <DropdownMenuItem
-                key={notification.id}
-                className={`p-4 cursor-pointer ${notification.read ? "opacity-60" : "font-medium"}`}
-                onClick={() => handleNotificationClick(notification.id)}
-              >
-                <div className="flex gap-3 w-full">
-                  <div className="text-lg">{getNotificationIcon(notification.type)}</div>
-                  <div className="flex-1 space-y-1">
-                    <div className="flex justify-between">
-                      <p className="text-sm font-medium leading-none">{notification.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
-                      </p>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{notification.message}</p>
-                  </div>
-                </div>
-              </DropdownMenuItem>
-            ))
-          ) : (
-            <div className="p-4 text-center text-muted-foreground">No notifications</div>
+        <DropdownMenuLabel className="flex justify-between items-center">
+          <span>Notifications</span>
+          {notifications.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-auto p-0 text-xs text-muted-foreground"
+              onClick={() => clearAllNotifications()}
+            >
+              Clear all
+            </Button>
           )}
-        </ScrollArea>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {notifications.length === 0 ? (
+          <div className="text-center py-4 text-muted-foreground">No notifications</div>
+        ) : (
+          notifications.map((notification) => (
+            <DropdownMenuItem
+              key={notification.id}
+              className="flex flex-col items-start p-3 cursor-default"
+              onSelect={(e) => e.preventDefault()}
+            >
+              <div className="flex justify-between w-full">
+                <span className="font-medium">{notification.title}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-0 text-xs text-muted-foreground"
+                  onClick={() => removeNotification(notification.id)}
+                >
+                  ×
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">{notification.message}</p>
+              <span className="text-xs text-muted-foreground mt-2">
+                {formatDistanceToNow(notification.createdAt, { addSuffix: true })}
+              </span>
+            </DropdownMenuItem>
+          ))
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

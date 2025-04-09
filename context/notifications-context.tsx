@@ -2,26 +2,25 @@
 
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
-import { useAuth } from "@/context/auth-context"
 
 export type NotificationType = "info" | "success" | "warning" | "error"
 
-export type Notification = {
+export interface Notification {
   id: string
   title: string
   message: string
   type: NotificationType
   read: boolean
-  createdAt: string
+  createdAt: Date
 }
 
-type NotificationsContextType = {
+interface NotificationsContextType {
   notifications: Notification[]
   unreadCount: number
   addNotification: (notification: Omit<Notification, "id" | "read" | "createdAt">) => void
   markAsRead: (id: string) => void
   markAllAsRead: () => void
-  clearNotification: (id: string) => void
+  removeNotification: (id: string) => void
   clearAllNotifications: () => void
 }
 
@@ -29,33 +28,38 @@ const NotificationsContext = createContext<NotificationsContextType | undefined>
 
 export function NotificationsProvider({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([])
-  const { user } = useAuth()
 
-  // Load notifications from localStorage when component mounts
+  // Load notifications from localStorage on mount
   useEffect(() => {
-    if (user) {
-      const storedNotifications = localStorage.getItem(`notifications_${user.id}`)
-      if (storedNotifications) {
-        setNotifications(JSON.parse(storedNotifications))
+    const storedNotifications = localStorage.getItem("notifications")
+    if (storedNotifications) {
+      try {
+        const parsedNotifications = JSON.parse(storedNotifications)
+        // Convert string dates back to Date objects
+        const notificationsWithDates = parsedNotifications.map((notification: any) => ({
+          ...notification,
+          createdAt: new Date(notification.createdAt),
+        }))
+        setNotifications(notificationsWithDates)
+      } catch (error) {
+        console.error("Failed to parse notifications from localStorage", error)
       }
     }
-  }, [user])
+  }, [])
 
   // Save notifications to localStorage whenever they change
   useEffect(() => {
-    if (user) {
-      localStorage.setItem(`notifications_${user.id}`, JSON.stringify(notifications))
-    }
-  }, [notifications, user])
+    localStorage.setItem("notifications", JSON.stringify(notifications))
+  }, [notifications])
 
   const unreadCount = notifications.filter((notification) => !notification.read).length
 
   const addNotification = (notification: Omit<Notification, "id" | "read" | "createdAt">) => {
     const newNotification: Notification = {
       ...notification,
-      id: `notification_${Date.now()}`,
+      id: `notification_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       read: false,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     }
     setNotifications((prev) => [newNotification, ...prev])
   }
@@ -70,7 +74,7 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
     setNotifications((prev) => prev.map((notification) => ({ ...notification, read: true })))
   }
 
-  const clearNotification = (id: string) => {
+  const removeNotification = (id: string) => {
     setNotifications((prev) => prev.filter((notification) => notification.id !== id))
   }
 
@@ -86,7 +90,7 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
         addNotification,
         markAsRead,
         markAllAsRead,
-        clearNotification,
+        removeNotification,
         clearAllNotifications,
       }}
     >
