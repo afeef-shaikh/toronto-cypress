@@ -6,7 +6,9 @@ import { MainNav } from "@/components/main-nav"
 import { GoogleMapComponent } from "@/components/google-map"
 import { useReports } from "@/context/reports-context"
 import { useAuth } from "@/context/auth-context"
+import { useNotifications } from "@/context/notifications-context"
 import { ReportStatusBadge } from "@/components/report-status-badge"
+import { EditReportDialog } from "@/components/edit-report-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
@@ -18,7 +20,8 @@ export default function ReportDetailPage() {
   const params = useParams()
   const router = useRouter()
   const { getReportById, updateReport } = useReports()
-  const { isAuthenticated, user } = useAuth()
+  const { isAuthenticated, user, isAdmin } = useAuth()
+  const { addNotification } = useNotifications()
   const { toast } = useToast()
 
   const [report, setReport] = useState(getReportById(params.id as string))
@@ -51,6 +54,7 @@ export default function ReportDetailPage() {
   }
 
   const isOwner = isAuthenticated && user?.id === report.userId
+  const canEdit = isOwner || isAdmin
 
   const getReportTypeLabel = (type: string) => {
     switch (type) {
@@ -72,7 +76,7 @@ export default function ReportDetailPage() {
   }
 
   const handleStatusUpdate = async (newStatus: string) => {
-    if (!isAuthenticated || !isOwner) {
+    if (!isAuthenticated || (!isOwner && !isAdmin)) {
       toast({
         title: "Permission denied",
         description: "You don't have permission to update this report.",
@@ -87,6 +91,14 @@ export default function ReportDetailPage() {
         status: newStatus as "pending" | "in-progress" | "resolved",
       })
       setReport(updatedReport)
+
+      // Add notification
+      addNotification({
+        title: "Report Status Updated",
+        message: `Your report status has been updated to ${newStatus.replace("-", " ")}.`,
+        type: "info",
+      })
+
       toast({
         title: "Status updated",
         description: `Report status updated to ${newStatus}.`,
@@ -99,6 +111,14 @@ export default function ReportDetailPage() {
       })
     } finally {
       setIsUpdating(false)
+    }
+  }
+
+  const handleReportUpdate = () => {
+    // Refresh the report data
+    const updatedReport = getReportById(report.id)
+    if (updatedReport) {
+      setReport(updatedReport)
     }
   }
 
@@ -121,9 +141,12 @@ export default function ReportDetailPage() {
             </div>
 
             <Card>
-              <CardHeader>
-                <CardTitle>Report Details</CardTitle>
-                <CardDescription>Information about this reported issue</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Report Details</CardTitle>
+                  <CardDescription>Information about this reported issue</CardDescription>
+                </div>
+                {canEdit && <EditReportDialog report={report} onUpdate={handleReportUpdate} />}
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
@@ -175,7 +198,7 @@ export default function ReportDetailPage() {
                   </div>
                 )}
               </CardContent>
-              {isOwner && (
+              {(isOwner || isAdmin) && (
                 <CardFooter>
                   <div className="w-full space-y-2">
                     <h3 className="font-semibold">Update Status</h3>

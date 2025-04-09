@@ -4,18 +4,22 @@ import type React from "react"
 
 import { createContext, useContext, useState, useEffect } from "react"
 
-type User = {
+export type UserRole = "citizen" | "admin"
+
+export type User = {
   id: string
   name: string
   email: string
+  role: UserRole
 }
 
 type AuthContextType = {
   user: User | null
-  login: (email: string, password: string) => Promise<void>
+  login: (email: string, password: string, role: UserRole) => Promise<void>
   register: (name: string, email: string, password: string) => Promise<void>
   logout: () => void
   isAuthenticated: boolean
+  isAdmin: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -33,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false)
   }, [])
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, role: UserRole = "citizen") => {
     // Mock login - in a real app, this would call an API
     return new Promise<void>((resolve, reject) => {
       setTimeout(() => {
@@ -43,6 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             id: "user_" + Math.random().toString(36).substr(2, 9),
             name: email.split("@")[0],
             email,
+            role,
           }
           setUser(mockUser)
           localStorage.setItem("user", JSON.stringify(mockUser))
@@ -64,6 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             id: "user_" + Math.random().toString(36).substr(2, 9),
             name,
             email,
+            role: "citizen" as UserRole,
           }
           setUser(mockUser)
           localStorage.setItem("user", JSON.stringify(mockUser))
@@ -92,6 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         register,
         logout,
         isAuthenticated: !!user,
+        isAdmin: user?.role === "admin",
       }}
     >
       {children}

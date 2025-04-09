@@ -7,13 +7,14 @@ import { Button } from "@/components/ui/button"
 import { useAuth } from "@/context/auth-context"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { MapPin, FileText, Home, Info, Menu, User } from "lucide-react"
+import { MapPin, FileText, Home, Info, Menu, User, LayoutDashboard } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { ModeToggle } from "@/components/mode-toggle"
+import { NotificationsButton } from "@/components/notifications"
 
 export function MainNav() {
   const pathname = usePathname()
-  const { user, logout, isAuthenticated } = useAuth()
+  const { user, logout, isAuthenticated, isAdmin } = useAuth()
 
   const routes = [
     {
@@ -47,6 +48,16 @@ export function MainNav() {
       active: pathname === "/about",
     },
   ]
+
+  // Add admin dashboard link if user is admin
+  if (isAdmin) {
+    routes.push({
+      href: "/admin",
+      label: "Admin Dashboard",
+      icon: LayoutDashboard,
+      active: pathname.startsWith("/admin"),
+    })
+  }
 
   const getInitials = (name: string) => {
     return name
@@ -116,6 +127,7 @@ export function MainNav() {
           </div>
 
           <div className="flex items-center gap-2">
+            <NotificationsButton />
             <ModeToggle />
 
             {isAuthenticated ? (
@@ -131,6 +143,11 @@ export function MainNav() {
                   <DropdownMenuItem asChild>
                     <Link href="/my-reports">My Reports</Link>
                   </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin">Admin Dashboard</Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={logout}>Log out</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
