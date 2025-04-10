@@ -4,7 +4,7 @@ import type React from "react"
 
 import { createContext, useContext, useState, useEffect } from "react"
 
-export type ReportStatus = "pending" | "in-progress" | "resolved"
+export type ReportStatus = "pending" | "in-progress" | "resolved" | "withdrawn"
 
 export type ReportType = "pothole" | "street-light" | "graffiti" | "garbage" | "sidewalk" | "traffic-sign" | "other"
 
@@ -22,6 +22,9 @@ export type Report = {
   images: string[]
   createdAt: string
   updatedAt: string
+  isDuplicate?: boolean
+  originalReportId?: string
+  isFalse?: boolean
 }
 
 type ReportsContextType = {
@@ -29,8 +32,11 @@ type ReportsContextType = {
   userReports: Report[]
   addReport: (report: Omit<Report, "id" | "createdAt" | "updatedAt">) => Promise<Report>
   updateReport: (id: string, updates: Partial<Report>) => Promise<Report>
+  withdrawReport: (id: string) => Promise<void>
   getReportById: (id: string) => Report | undefined
   getNearbyReports: (lat: number, lng: number, radius: number) => Report[]
+  markAsDuplicate: (reportId: string, originalId: string) => Promise<void>
+  markAsFalse: (reportId: string) => Promise<void>
 }
 
 const ReportsContext = createContext<ReportsContextType | undefined>(undefined)
@@ -145,13 +151,36 @@ export function ReportsProvider({ children }: { children: React.ReactNode }) {
     return updatedReport
   }
 
+  const withdrawReport = async (id: string) => {
+    const reportIndex = reports.findIndex((r) => r.id === id)
+    if (reportIndex === -1) {
+      throw new Error(`Report with id ${id} not found`)
+    }
+
+    // Check if the report can be withdrawn (only if it's pending)
+    if (reports[reportIndex].status !== "pending") {
+      throw new Error("Only pending reports can be withdrawn")
+    }
+
+    const updatedReport = {
+      ...reports[reportIndex],
+      status: "withdrawn" as ReportStatus,
+      updatedAt: new Date().toISOString(),
+    }
+
+    const newReports = [...reports]
+    newReports[reportIndex] = updatedReport
+
+    setReports(newReports)
+    return
+  }
+
   const getReportById = (id: string) => {
     return reports.find((report) => report.id === id)
   }
 
   const getNearbyReports = (lat: number, lng: number, radius: number) => {
     // Simple distance calculation (not accounting for Earth's curvature)
-    // In a real app, you'd use a more accurate formula like the Haversine formula
     return reports.filter((report) => {
       const dlat = report.location.lat - lat
       const dlng = report.location.lng - lng
@@ -160,6 +189,50 @@ export function ReportsProvider({ children }: { children: React.ReactNode }) {
       const distanceKm = distance * 111
       return distanceKm <= radius
     })
+  }
+
+  // Admin functionality: Mark a report as duplicate
+  const markAsDuplicate = async (reportId: string, originalId: string) => {
+    const reportIndex = reports.findIndex((r) => r.id === reportId)
+    const originalReportIndex = reports.findIndex((r) => r.id === originalId)
+
+    if (reportIndex === -1 || originalReportIndex === -1) {
+      throw new Error("Report not found")
+    }
+
+    const updatedReport = {
+      ...reports[reportIndex],
+      isDuplicate: true,
+      originalReportId: originalId,
+      status: "withdrawn" as ReportStatus,
+      updatedAt: new Date().toISOString(),
+    }
+
+    const newReports = [...reports]
+    newReports[reportIndex] = updatedReport
+
+    setReports(newReports)
+  }
+
+  // Admin functionality: Mark a report as false
+  const markAsFalse = async (reportId: string) => {
+    const reportIndex = reports.findIndex((r) => r.id === reportId)
+
+    if (reportIndex === -1) {
+      throw new Error("Report not found")
+    }
+
+    const updatedReport = {
+      ...reports[reportIndex],
+      isFalse: true,
+      status: "withdrawn" as ReportStatus,
+      updatedAt: new Date().toISOString(),
+    }
+
+    const newReports = [...reports]
+    newReports[reportIndex] = updatedReport
+
+    setReports(newReports)
   }
 
   if (isLoading) {
@@ -173,8 +246,11 @@ export function ReportsProvider({ children }: { children: React.ReactNode }) {
         userReports: userReports(),
         addReport,
         updateReport,
+        withdrawReport,
         getReportById,
         getNearbyReports,
+        markAsDuplicate,
+        markAsFalse,
       }}
     >
       {children}

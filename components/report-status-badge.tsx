@@ -15,6 +15,8 @@ export function ReportStatusBadge({ status, className }: ReportStatusBadgeProps)
         return "bg-blue-500 hover:bg-blue-600"
       case "resolved":
         return "bg-green-500 hover:bg-green-600"
+      case "withdrawn":
+        return "bg-gray-500 hover:bg-gray-600"
       default:
         return "bg-gray-500 hover:bg-gray-600"
     }
@@ -28,6 +30,8 @@ export function ReportStatusBadge({ status, className }: ReportStatusBadgeProps)
         return "In Progress"
       case "resolved":
         return "Resolved"
+      case "withdrawn":
+        return "Withdrawn"
       default:
         return "Unknown"
     }

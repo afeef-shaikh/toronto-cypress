@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/auth-context"
 import { Button } from "@/components/ui/button"
@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertCircle } from "lucide-react"
 
 interface AuthFormProps {
   mode: "login" | "register"
@@ -20,14 +22,29 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const { login, register } = useAuth()
+  const { login, register, authError, clearAuthError } = useAuth()
   const router = useRouter()
   const { toast } = useToast()
+
+  // Sync our local error with the auth context error
+  useEffect(() => {
+    if (authError) {
+      setError(authError)
+    }
+  }, [authError])
+
+  // Clear any errors when switching between login/register
+  useEffect(() => {
+    setError(null)
+    clearAuthError()
+  }, [mode, clearAuthError])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError(null)
 
     try {
       if (mode === "login") {
@@ -36,20 +53,18 @@ export function AuthForm({ mode }: AuthFormProps) {
           title: "Login successful",
           description: "Welcome back!",
         })
+        router.push("/")
       } else {
         await register(name, email, password)
         toast({
           title: "Registration successful",
           description: "Your account has been created.",
         })
+        router.push("/")
       }
-      router.push("/")
     } catch (error) {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "An error occurred",
-        variant: "destructive",
-      })
+      // Error is already set in the auth context
+      setError(error instanceof Error ? error.message : "An unexpected error occurred")
     } finally {
       setIsLoading(false)
     }
@@ -67,6 +82,13 @@ export function AuthForm({ mode }: AuthFormProps) {
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
           {mode === "register" && (
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>

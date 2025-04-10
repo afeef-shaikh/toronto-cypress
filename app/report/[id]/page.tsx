@@ -9,6 +9,7 @@ import { useAuth } from "@/context/auth-context"
 import { useNotifications } from "@/context/notifications-context"
 import { ReportStatusBadge } from "@/components/report-status-badge"
 import { EditReportDialog } from "@/components/edit-report-dialog"
+import { WithdrawReportDialog } from "@/components/withdraw-report-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
@@ -122,6 +123,28 @@ export default function ReportDetailPage() {
     }
   }
 
+  // Don't display withdrawn reports except to admins
+  if (report.status === "withdrawn" && !isAdmin) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <MainNav />
+        <main className="flex-1 container py-8">
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Report Withdrawn</AlertTitle>
+            <AlertDescription>This report has been withdrawn and is no longer active.</AlertDescription>
+          </Alert>
+          <div className="mt-4">
+            <Button variant="outline" onClick={() => router.push("/my-reports")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to My Reports
+            </Button>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       <MainNav />
@@ -146,7 +169,12 @@ export default function ReportDetailPage() {
                   <CardTitle>Report Details</CardTitle>
                   <CardDescription>Information about this reported issue</CardDescription>
                 </div>
-                {canEdit && <EditReportDialog report={report} onUpdate={handleReportUpdate} />}
+                {canEdit && (
+                  <div className="flex gap-2">
+                    <EditReportDialog report={report} onUpdate={handleReportUpdate} />
+                    <WithdrawReportDialog report={report} onUpdate={handleReportUpdate} />
+                  </div>
+                )}
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>

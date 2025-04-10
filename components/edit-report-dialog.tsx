@@ -20,6 +20,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { useReports, type Report, type ReportType } from "@/context/reports-context"
 import { useNotifications } from "@/context/notifications-context"
 import { Edit } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface EditReportDialogProps {
   report: Report
@@ -31,14 +32,25 @@ export function EditReportDialog({ report, onUpdate }: EditReportDialogProps) {
   const [type, setType] = useState<ReportType>(report.type)
   const [description, setDescription] = useState(report.description)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const { updateReport } = useReports()
   const { addNotification } = useNotifications()
   const { toast } = useToast()
 
+  // Check if the report can be edited (only pending reports can be edited)
+  const canEdit = report.status === "pending"
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!canEdit) {
+      setError("Report cannot be edited as it has been/is being processed")
+      return
+    }
+
     setIsSubmitting(true)
+    setError(null)
 
     try {
       await updateReport(report.id, {
@@ -60,6 +72,7 @@ export function EditReportDialog({ report, onUpdate }: EditReportDialogProps) {
       setOpen(false)
       if (onUpdate) onUpdate()
     } catch (error) {
+      setError(error instanceof Error ? error.message : "Failed to update report. Please try again.")
       toast({
         title: "Update Failed",
         description: "Failed to update report. Please try again.",
@@ -85,9 +98,23 @@ export function EditReportDialog({ report, onUpdate }: EditReportDialogProps) {
             <DialogDescription>Make changes to your report. Click save when you're done.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {!canEdit && (
+              <Alert>
+                <AlertDescription>
+                  This report cannot be edited because it is already being processed or has been resolved.
+                </AlertDescription>
+              </Alert>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="type">Problem Type</Label>
-              <Select value={type} onValueChange={(value) => setType(value as ReportType)}>
+              <Select value={type} onValueChange={(value) => setType(value as ReportType)} disabled={!canEdit}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select problem type" />
                 </SelectTrigger>
@@ -110,6 +137,7 @@ export function EditReportDialog({ report, onUpdate }: EditReportDialogProps) {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Describe the issue in detail"
                 className="min-h-[100px]"
+                disabled={!canEdit}
               />
             </div>
           </div>
@@ -117,7 +145,7 @@ export function EditReportDialog({ report, onUpdate }: EditReportDialogProps) {
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || !canEdit}>
               {isSubmitting ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>

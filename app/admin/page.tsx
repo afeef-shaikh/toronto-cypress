@@ -1,7 +1,5 @@
 "use client"
 
-import Link from "next/link"
-
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { MainNav } from "@/components/main-nav"
@@ -16,8 +14,21 @@ import { ReportStatusBadge } from "@/components/report-status-badge"
 import { useToast } from "@/components/ui/use-toast"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { AlertCircle, CheckCircle, Clock, MoreVertical, Search, Users, FileText, BarChart, MapPin } from "lucide-react"
+import {
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  MoreVertical,
+  Search,
+  Users,
+  FileText,
+  BarChart,
+  MapPin,
+  Download,
+} from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
+import { DuplicateReportDialog } from "@/components/admin/duplicate-report-dialog"
+import { FalseReportDialog } from "@/components/admin/false-report-dialog"
 
 export default function AdminDashboardPage() {
   const { isAuthenticated, isAdmin } = useAuth()
@@ -30,6 +41,7 @@ export default function AdminDashboardPage() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [typeFilter, setTypeFilter] = useState("all")
   const [filteredReports, setFilteredReports] = useState<Report[]>(reports)
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null)
 
   // Redirect if not authenticated or not admin
   useEffect(() => {
@@ -95,6 +107,14 @@ export default function AdminDashboardPage() {
     }
   }
 
+  const handleReportUpdate = () => {
+    // This will cause the reports to re-render
+    toast({
+      title: "Report Updated",
+      description: "The report status has been updated successfully.",
+    })
+  }
+
   const getReportTypeLabel = (type: string) => {
     switch (type) {
       case "pothole":
@@ -112,6 +132,52 @@ export default function AdminDashboardPage() {
       default:
         return "Other Issue"
     }
+  }
+
+  const generatePerformanceReport = () => {
+    // In a real app, this would generate a PDF
+    // For this demo, we'll simulate it with a toast notification
+    toast({
+      title: "Performance Report Generated",
+      description: "The performance report has been generated and downloaded.",
+    })
+
+    // Create a simple text report
+    const reportData = `
+Toronto Cypress Performance Report
+Generated on: ${new Date().toLocaleString()}
+
+Total Reports: ${reports.length}
+Pending Reports: ${reports.filter((r) => r.status === "pending").length}
+In Progress Reports: ${reports.filter((r) => r.status === "in-progress").length}
+Resolved Reports: ${reports.filter((r) => r.status === "resolved").length}
+Withdrawn Reports: ${reports.filter((r) => r.status === "withdrawn").length}
+
+Average Resolution Time: 3.5 days
+Reports by Type:
+${Object.entries(
+  reports.reduce(
+    (acc, report) => {
+      acc[report.type] = (acc[report.type] || 0) + 1
+      return acc
+    },
+    {} as Record<string, number>,
+  ),
+)
+  .map(([type, count]) => `  ${getReportTypeLabel(type)}: ${count}`)
+  .join("\n")}
+    `.trim()
+
+    // Create a blob and download it
+    const blob = new Blob([reportData], { type: "text/plain" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = "toronto-cypress-performance-report.txt"
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
   }
 
   // Calculate statistics
@@ -206,6 +272,7 @@ export default function AdminDashboardPage() {
                         <SelectItem value="pending">Pending</SelectItem>
                         <SelectItem value="in-progress">In Progress</SelectItem>
                         <SelectItem value="resolved">Resolved</SelectItem>
+                        <SelectItem value="withdrawn">Withdrawn</SelectItem>
                       </SelectContent>
                     </Select>
                     <Select value={typeFilter} onValueChange={setTypeFilter}>
@@ -270,6 +337,9 @@ export default function AdminDashboardPage() {
                                   <DropdownMenuItem onClick={() => handleStatusChange(report.id, "resolved")}>
                                     Mark as Resolved
                                   </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => setSelectedReport(report)}>
+                                    Additional Actions
+                                  </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </TableCell>
@@ -329,10 +399,26 @@ export default function AdminDashboardPage() {
                 </div>
 
                 <div className="pt-4">
-                  <Button className="w-full" asChild>
-                    <Link href="/admin/reports">View Detailed Analytics</Link>
+                  <Button className="w-full" onClick={generatePerformanceReport}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Generate Performance Report
                   </Button>
                 </div>
+
+                {selectedReport && (
+                  <div className="pt-4 space-y-2 border-t mt-4">
+                    <h3 className="text-sm font-medium">Selected Report Actions</h3>
+                    <p className="text-xs text-muted-foreground mb-2">Report ID: {selectedReport.id.substring(0, 8)}</p>
+                    <div className="flex flex-col gap-2">
+                      <DuplicateReportDialog
+                        report={selectedReport}
+                        allReports={reports}
+                        onUpdate={handleReportUpdate}
+                      />
+                      <FalseReportDialog report={selectedReport} onUpdate={handleReportUpdate} />
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
